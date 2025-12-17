@@ -17,7 +17,9 @@ import {
   faCamera,
   faClipboardList,
   faBriefcase,
-  faGraduationCap
+  faGraduationCap,
+  faTimes,
+  faMapMarkerAlt 
 } from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -86,12 +88,13 @@ const SectionHeader = ({ icon, title, colorClass }: any) => (
   </div>
 )
 
+
 export default function CheckinForm() {
   const [loading, setLoading] = useState(false)
   
   const [formData, setFormData] = useState({
-    pai: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: false, trabalha: false, profissao: '', renda: '' },
-    mae: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: false, trabalha: false, profissao: '', renda: '' },
+    pai: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: true, endereco_extra: '', trabalha: false, profissao: '', renda: '' },
+    mae: { nome: '', nasc: '', idade: '', telefone: '', conjugal: 'Casado', mora: true, endereco_extra: '', trabalha: false, profissao: '', renda: '' },
     endereco: { rua: '', numero: '', complemento: '', bairro: '', referencia: '', tipo_moradia: 'Própria' },
     filhos: [] as any[], 
     observacoes: ''
@@ -102,8 +105,19 @@ export default function CheckinForm() {
   const addFilho = () => {
     setFormData({
       ...formData,
-      filhos: [...formData.filhos, { nome: '', nasc: '', idade: '', mora: false, estuda: false, serie: '', documento: false }]
+      filhos: [...formData.filhos, { nome: '', nasc: '', idade: '', mora: true, estuda: false, serie: '', documento: false }]
     })
+  }
+
+  const removeFilho = (indexToRemove: number) => {
+    const novosFilhos = formData.filhos.filter((_, index) => index !== indexToRemove)
+    setFormData({ ...formData, filhos: novosFilhos })
+  }
+
+  const removeFoto = (e: any) => {
+    e.preventDefault() 
+    e.stopPropagation() 
+    setFotoCasa(null)
   }
 
   const handleChange = (section: string, field: string, value: any, index?: number) => {
@@ -145,6 +159,7 @@ export default function CheckinForm() {
         pai_telefone: formData.pai.telefone,
         pai_conjugal: formData.pai.conjugal,
         pai_mora: formData.pai.mora,
+        pai_endereco: !formData.pai.mora ? formData.pai.endereco_extra : null,
         pai_trabalha: formData.pai.trabalha,
         pai_profissao: formData.pai.trabalha ? formData.pai.profissao : null, 
         pai_renda: (formData.pai.trabalha && formData.pai.renda) ? parseFloat(formData.pai.renda) : null,
@@ -155,6 +170,7 @@ export default function CheckinForm() {
         mae_telefone: formData.mae.telefone,
         mae_conjugal: formData.mae.conjugal,
         mae_mora: formData.mae.mora,
+        mae_endereco: !formData.mae.mora ? formData.mae.endereco_extra : null,
         mae_trabalha: formData.mae.trabalha,
         mae_profissao: formData.mae.trabalha ? formData.mae.profissao : null,
         mae_renda: (formData.mae.trabalha && formData.mae.renda) ? parseFloat(formData.mae.renda) : null,
@@ -167,7 +183,7 @@ export default function CheckinForm() {
         foto_casa_url: fotoCasaUrl,
 
         filhos: formData.filhos,
-        observacoes: `Tipo Moradia: ${formData.endereco.tipo_moradia} \n ${formData.observacoes}` 
+        observacoes: `Tipo Moradia: ${formData.endereco.tipo_moradia} \n ${formData.endereco.tipo_moradia}` 
       }])
 
       if (error) throw error
@@ -239,9 +255,24 @@ export default function CheckinForm() {
 
           <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-4">
-               <CheckboxGroup label="Mora na residência?" checked={formData.pai.mora} onChange={(v:any) => handleChange('pai', 'mora', v)} />
+               <CheckboxGroup label="Mora na residência (com a criança)?" checked={formData.pai.mora} onChange={(v:any) => handleChange('pai', 'mora', v)} />
                <CheckboxGroup label="Possui trabalho?" icon={faBriefcase} checked={formData.pai.trabalha} onChange={(v:any) => handleChange('pai', 'trabalha', v)} />
             </div>
+
+            {!formData.pai.mora && (
+               <div className="animate-pulse-once border-t border-indigo-100 pt-4 md:border-t-0 md:pt-0">
+                  <div className="flex items-center gap-2 mb-2 text-indigo-700 text-sm font-bold">
+                     <FontAwesomeIcon icon={faMapMarkerAlt} />
+                     <span>Endereço Atual do Pai</span>
+                  </div>
+                  <InputGroup 
+                    label="Endereço Completo (Rua, Nº, Bairro)" 
+                    value={formData.pai.endereco_extra} 
+                    onChange={(v:any) => handleChange('pai', 'endereco_extra', v)} 
+                    placeholder="Ex: Rua A, 123, Centro" 
+                  />
+               </div>
+            )}
 
             {formData.pai.trabalha && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse-once border-t border-indigo-100 pt-4 md:border-t-0 md:pt-0">
@@ -273,9 +304,24 @@ export default function CheckinForm() {
 
           <div className="bg-pink-50/50 p-4 rounded-xl border border-pink-100 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-4">
-               <CheckboxGroup label="Mora na residência?" checked={formData.mae.mora} onChange={(v:any) => handleChange('mae', 'mora', v)} />
+               <CheckboxGroup label="Mora na residência (com a criança)?" checked={formData.mae.mora} onChange={(v:any) => handleChange('mae', 'mora', v)} />
                <CheckboxGroup label="Possui trabalho?" icon={faBriefcase} checked={formData.mae.trabalha} onChange={(v:any) => handleChange('mae', 'trabalha', v)} />
             </div>
+
+            {!formData.mae.mora && (
+               <div className="animate-pulse-once border-t border-pink-100 pt-4 md:border-t-0 md:pt-0">
+                  <div className="flex items-center gap-2 mb-2 text-pink-700 text-sm font-bold">
+                     <FontAwesomeIcon icon={faMapMarkerAlt} />
+                     <span>Endereço Atual da Mãe</span>
+                  </div>
+                  <InputGroup 
+                    label="Endereço Completo (Rua, Nº, Bairro)" 
+                    value={formData.mae.endereco_extra} 
+                    onChange={(v:any) => handleChange('mae', 'endereco_extra', v)} 
+                    placeholder="Ex: Rua B, 456, Centro" 
+                  />
+               </div>
+            )}
 
             {formData.mae.trabalha && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-pink-100 pt-4 md:border-t-0 md:pt-0">
@@ -309,21 +355,45 @@ export default function CheckinForm() {
             </div>
           </div>
           
-          <div className="mt-6 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 text-center hover:bg-gray-100 transition-colors">
-            <label className="cursor-pointer block">
-              <span className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Foto da Fachada da Casa</span>
-              <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-200">
-                 <FontAwesomeIcon icon={faCamera} className="text-gray-400 text-xl" />
+          <div className="mt-6">
+            {!fotoCasa ? (
+              <div className="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300 text-center hover:bg-gray-100 transition-colors">
+                <label className="cursor-pointer block">
+                  <span className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Foto da Fachada da Casa</span>
+                  <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-gray-200">
+                     <FontAwesomeIcon icon={faCamera} className="text-gray-400 text-xl" />
+                  </div>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => setFotoCasa(e.target.files?.[0] || null)} 
+                    className="hidden" 
+                  />
+                  <span className="text-emerald-600 font-bold hover:underline">Clique para enviar foto</span>
+                  <p className="text-xs text-gray-400 mt-1">Nenhum arquivo selecionado</p>
+                </label>
               </div>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={(e) => setFotoCasa(e.target.files?.[0] || null)} 
-                className="hidden" 
-              />
-              <span className="text-emerald-600 font-bold hover:underline">Clique para enviar foto</span>
-              <p className="text-xs text-gray-400 mt-1">{fotoCasa ? `Arquivo selecionado: ${fotoCasa.name}` : 'Nenhum arquivo selecionado'}</p>
-            </label>
+            ) : (
+              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between relative">
+                 <div className="flex items-center gap-3">
+                    <div className="bg-emerald-100 text-emerald-600 w-10 h-10 rounded-full flex items-center justify-center">
+                       <FontAwesomeIcon icon={faCamera} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-emerald-800">Foto Selecionada</p>
+                      <p className="text-xs text-emerald-600 truncate max-w-[200px]">{fotoCasa.name}</p>
+                    </div>
+                 </div>
+                 <button 
+                   type="button" 
+                   onClick={removeFoto} 
+                   className="bg-white text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors border border-red-100"
+                   title="Remover foto"
+                 >
+                   <FontAwesomeIcon icon={faTimes} />
+                 </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -352,9 +422,20 @@ export default function CheckinForm() {
           <div className="space-y-6">
             {formData.filhos.map((filho, index) => (
               <div key={index} className="p-5 bg-gray-50 rounded-xl border border-gray-200 relative group hover:border-amber-200 transition-colors">
+                
                 <div className="absolute -top-3 left-4 text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 shadow-sm uppercase tracking-wide">
                   Filho #{index + 1}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeFilho(index)}
+                  className="absolute -top-3 right-4 bg-red-50 text-red-500 border border-red-200 hover:bg-red-500 hover:text-white px-2 py-1 rounded-full shadow-sm transition-all text-xs flex items-center gap-1"
+                  title="Remover este filho"
+                >
+                  <FontAwesomeIcon icon={faTimes} /> Remover
+                </button>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-3 mb-4">
                    <InputGroup label="Nome Completo" value={filho.nome} onChange={(v:any) => handleChange('filhos', 'nome', v, index)} />
                    <div className="grid grid-cols-2 gap-3">
@@ -387,7 +468,7 @@ export default function CheckinForm() {
             rows={4}
             value={formData.observacoes}
             onChange={(e) => handleChange('root', 'observacoes', e.target.value)}
-            className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none resize-none transition-all placeholder-gray-400"
+            className="w-full bg-gray-50 text-gray-900 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none resize-none transition-all placeholder-gray-400"
             placeholder="Digite qualquer informação adicional importante sobre a família..."
           />
         </section>
